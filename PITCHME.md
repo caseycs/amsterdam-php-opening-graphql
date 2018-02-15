@@ -422,9 +422,9 @@ Two approaches: fake/downgrade or throw an error (like `permissionDenied`).
 * Always "downgrade" related data queries according to user permissions
 * Return `permissionDenied` application error only for definitely invalid use-cases, like filter enum value which is available only for owners.
 
----
++++
 
-## Writing middleware
+### Writing middleware
 
 No middleware support our of the box, but you can emulate them by wrapping resolvers into closures.
 
@@ -523,8 +523,7 @@ mutation internalError {
 
 Out-of-the-box: `interface GraphQL\Error\ClientAware` - to propagate original exception to the GraphQL errors (message). Don't do it.
 
-* Category `application` - to be handled by the front-end
-* Category `internal` - errors what we missed inside graphql
+* Category `application/internal` - do separate something that front-end should handle
 * `error` field as identifier for the front-end
 
 ```
