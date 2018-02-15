@@ -10,7 +10,10 @@ Or maybe a bit more ;-)
 * Defining protocol
 * Implementation: libraries, frameworks integration
 * Writing the code: resolvers, middleware
-* Error handling: format, types, logging, testing, security
+* Error handling: format, types, logging
+* Testing
+* Security
+* Tooling
 * Lead time: how long it will take
 * Questions
 
@@ -242,28 +245,34 @@ Handling multiple errors (validation)
 
 We do handle all the exceptions, yes. However we still need to log them.
 
-### Testing framework
+---
+
+## Testing
 
 You will have to write custom PHPUnit abstraction layer. In our case:
 
 ```
-function assertQuerySuccess(Query $query, array $variables = []): GraphQLResponse
-function assertQueryFail(Query $query, array $variables = []): GraphQLResponse
-function assertQueryErrors(string ...$expectErrors): void
+assertQuerySuccess(Query $query, array $variables = []): GraphQLResponse
+assertQueryFail(Query $query, array $variables = []): GraphQLResponse
+assertQueryErrors(string ...$expectErrors): void
 ```
 
-### Testing helper calls
++++
+
+### PHPUnit helper calls
 
 Handy to have helper methods for every request:
 
 ```
-function mutationXxxxYyyy(array $variables, string $returnFields = '{default{fields}}'): Query
-function queryXxxxYyyy(array $variables, string $returnFields = '{default{fields}}'): Query
+mutationXxxxYyyy(array $variables, string $returnFields = '{default{fields}}'): Query
+queryXxxxYyyy(array $variables, string $returnFields = '{default{fields}}'): Query
 ```
 
-Faker to generate variables as much as possible, but allowing to overwrite them via `$variables`
++++
 
-Test example:
+### Test example
+
+Faker to generate variables as much as possible, but allowing to overwrite them via `$variables`
 
 ```
 public function testRegistrationSuccess()
@@ -273,19 +282,42 @@ public function testRegistrationSuccess()
     '{viewer{user{firstName}}}'
   );
   $this->assertQuerySuccess($mutation);
-  $this->assertSame($mutation->vars->firstName, $this->responseData['viewer.user.firstName']);
+  $this->assertSame(
+    $mutation->vars->firstName,
+    $this->responseData['viewer.user.firstName']
+  );
 }
 ```
-+++
 
-### Security
+---
+
+## Security
 
 * Disable introspection on production
 * Limit maximal queries complexity
 * Hide your back-office JS from public access
 
-
 ---
+
+## Tooling
+
+### Schema browser
+
+ChomeiQL: https://chrome.google.com/webstore/detail/chromeiql/fkkiamalmpiidkljmicmjfbieiclmeij?hl=en
+
+![GitHub](assets/chromeiql.png)
+
++++
+
+### Allows you to add new call
+
+GraphQL Faker: https://github.com/APIs-guru/graphql-faker
+
+![GitHub](assets/chromeiql.png)
+
+Proxies your current endpoint and allows you to add new queries and fields to existing ones.
+
+--- 
 
 ## Lead time
 
