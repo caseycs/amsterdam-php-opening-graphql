@@ -212,20 +212,18 @@ What open-source community will bring to us
 
 ![Packagist](assets/packagist.png)
 
----
-
-### Serving requests
-
-We already have a frameworks
-
-* Bullt-in server
-* Facade method
-
 +++
 
 ### Eloquent binding
 
 ... and similar ORM/ActiveRecord mappers - please, don't.
+
+---
+
+### Serving requests
+
+* Bullt-in PSR-7 compatible server
+* Facade method
 
 +++
 
