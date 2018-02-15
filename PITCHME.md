@@ -79,13 +79,13 @@ What open-source community will bring to us
 
 ### Github
 
-![GitHub](assets/github.jpg)
+![GitHub](assets/github.png)
 
 +++
 
 ### Packagist
 
-![Packagist](assets/packagist.jpg)
+![Packagist](assets/packagist.png)
 
 ---
 
