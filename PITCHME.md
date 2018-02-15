@@ -1,5 +1,7 @@
 # Adding GraphQL to an existing project 
 
+Ilia Kondrashov
+
 ---
 
 ## During next 15 minutes...
@@ -19,27 +21,72 @@ Or maybe a bit more ;-)
 
 ## Few words about myself
 
+Ilia Kondrashov
+
+I’m doing web development since ~2003
+
+Development, infrastructure, product
+
 ---
 
 ## About GraphQL
 
-Strictly typed
+* New REST
+* Strictly typed
+* Self-documented (including comments and deprecation marks)
 
 +++
 
 ### Examples
+
+```
+schema {
+  query: Query
+}
+type Query {
+  pet: Pet
+}
+type Pet {
+  name: String
+}
+```
+
++++
+
+### Comments and deprecations
+
+type Query {
+  petty: Petty! @deprecated(reason: "Please use petNew instead")
+  # Free text comment!
+  pet: Pet!
+}
+
++++
+
+### Scalar types, required flag and composition 
+
+type Pet {
+  name: String!
+  count: Integer
+  isActive: Boolean!
+  sibling: Pet
+  children: [Pet]!
+}
 
 +++
 
 ### Use-cases
 
 * External API
-* Separate front-end
+* Front-end, especially - fully separated ones, since Twig and whole back-end templating is slowly dying
 
-+++
+### Who are using GraphQL?
 
-### Who is using GraphQL?
-
+* Facebook
+* GitHub 
+* Coursera
+* Yelp
+* ...
 
 ---
 
@@ -48,17 +95,62 @@ Strictly typed
 * Separating entities
 * Different point of view, then database tables and Doctrine models
 
+
+
 +++ 
 
 ### Enums
+
+No more pain to understand all possible values:
+
+```
+type Schedule {
+  weekdays: Weekday!
+  ...
+}
+enum Weekday {
+  FRIDAY
+  MONDAY
+  ...
+}
+```
 
 +++ 
 
 ### Queries
 
+```
+type User {
+  post(filter: PostFilter!): Post!
+}
+input PostFilter {
+  uuid: Uuid
+  slug: String
+}
+type Post {
+  uuid: Uuid
+}
+
+```
+
 +++
 
 ### Mutations
+
+```
+authLoginViaEmail(input: AuthLoginViaEmailInput): AuthLoginViaEmailPayload
+input AuthLoginViaEmailInput {
+  email: String!
+  password: String!
+}
+type AuthLoginViaEmailPayload {
+  viewer: Viewer!
+}
+type Viewer {
+  uuid: Uuid!
+}
+
+```
 
 +++
 
@@ -112,11 +204,12 @@ Laravel example:
 ```
 use Psr\Http\Message\ServerRequestInterface;
 Route::get('/', function (ServerRequestInterface $request) {
-    ...
+    return app(GraphQL\Server\StandardServer::class)
+      ->executePsrRequest($request)
 });
 ```
 
-* Simple
+* Looks simple
 * Works out of the box
 
 +++
@@ -127,13 +220,13 @@ Which you can inside regular controller action method:
 
 ```
 $result = \GraphQL\GraphQL::executeQuery(
-    $schema, $queryString, $rootValue, $context,
-    $variableValues, $operationName, $fieldResolver,
-    $validationRules
+    $schema, $queryString, $rootValue, $context, $variables
 );
 ```
+
+* Simpler to debug & fine-tune
+* Allows more customisation
 * Can be integrated with whatever framework 
-* Allows customisation
 
 ---
 
@@ -204,17 +297,17 @@ However extra attention which field to show to whom is important.
 
 +++
 
-Our approach:
+Two approaches: fake/downgrade or throw error (like `permissionDenied`).
 
-* Mark fields as required according to the real data model, and return empty/invalid value (beginning of the century for the date) when permissions is not enough
-* Return `permissionDenied` application error when filter is not available
+* Mark fields as required according to the real data model, and return empty value (empty string, -1, beginning of the century for the date) on user permissions mismatch
 * Always "downgrade" related data queries according to user permissions
+* Return `permissionDenied` application error only for definitely invalid use-cases, like filter enum value which is available only for owners.
 
 ---
 
 ## Writing middleware
 
-No middleware support our of the box, but you can emulate them by wrapping resolvers intro closures.
+No middleware support our of the box, but you can emulate them by wrapping resolvers into closures.
 
 Example use-case: analyse resolver interface to extract permission check:
 
@@ -315,6 +408,7 @@ public function testRegistrationSuccess()
 ## Security
 
 * Disable introspection on production
+* Use CSRF token
 * Limit maximal queries complexity
 * Hide your back-office JS from public access
 
@@ -342,22 +436,15 @@ Proxies your current endpoint and allows you to add new queries and fields to ex
 
 ## Lead time
 
-Warning! Very broad assumptions!
-
 * Learning curve: 1 week for playground and experiments
-* Prototype: 1 week for basic integration
-* First real use-case: 2 weeks all around, including alignment with the front-end team
-
----
-
-## Benefits
-
-* Separate front-end - Twig and other back-end templating are dying
-* Full-fletch testing scenarios - starting from registering users
+* First prototype: 1 week for basic integration
+* First real use-case: 2 weeks before going live, including alignment with the front-end team
 
 ---
 
 ## Questions
+
+Feel free to ask!
 
 This presentation is available on GitHub
 
