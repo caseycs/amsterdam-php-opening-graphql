@@ -55,16 +55,19 @@ type Pet {
 
 ### Comments and deprecations
 
+```
 type Query {
   petty: Petty! @deprecated(reason: "Please use petNew instead")
   # Free text comment!
   pet: Pet!
 }
+```
 
 +++
 
 ### Scalar types, required flag and composition 
 
+```
 type Pet {
   name: String!
   count: Integer
@@ -72,6 +75,7 @@ type Pet {
   sibling: Pet
   children: [Pet]!
 }
+```
 
 +++
 
