@@ -101,7 +101,7 @@ enum Weekday {
 
 * External API
 * Front-end, especially - fully separated ones, since Twig and whole back-end templating is slowly dying
-* Back-office - however it does not feel like from the very beginning
+* Back-office - however it does not feel like from the first look
 
 +++
 
@@ -127,26 +127,24 @@ Hard to get "back-end developer" context out of your head and start thinking as 
 
 ### Entities
 
+Think about domain entities, but not your database!
+
 Examples of different approach:
 
 * ImageAvatar with specific resizes instead of generic Image Model
 * Geolocation of different elements from the front-end prospective might look all the same, even when on the back-end they are stored totally different
-
-```
-type User {
-  uuid: Uuid!
-  email: String!
-  avatar: ImageAvatar
-  posts(filter: PostsFilter!): [Post]!
-  address: Address!
-}
-```
 
 +++
 
 ### Queries
 
 ```
+schema {
+  query: Query
+}
+type Query {
+  user(uuid: Uuid!): User!
+}
 type User {
   post(filter: PostFilter!): Post!
 }
@@ -164,22 +162,22 @@ type Post {
 ### Mutations
 
 ```
-authLoginViaEmail(input: AuthLoginViaEmailInput): AuthLoginViaEmailPayload
+authLoginViaEmail(input: AuthLoginViaEmailInput)
+  : AuthLoginViaEmailPayload
+
 input AuthLoginViaEmailInput {
-  email: String!
-  password: String!
+  email: String!, password: String!
   location: LocationInput
 }
+
 input LocationInput {
-  lat: Float!
-  lng: Float!
-}
+  lat: Float!, lng: Float!}
+
 type AuthLoginViaEmailPayload {
-  viewer: Viewer!
-}
+  viewer: Viewer!}
+
 type Viewer {
-  uuid: Uuid!
-}
+  uuid: Uuid!}
 ```
 
 +++
