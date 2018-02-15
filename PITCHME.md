@@ -100,7 +100,7 @@ We already have a frameworks
 
 #### PSR-7 Server
 
-Plug into your framework
+Provides standalone server
 
 ```
 class GraphQL\Server\StandardServer
@@ -113,6 +113,8 @@ class GraphQL\Server\StandardServer
 }
 ```
 
+Which you can plug into your framework (Laravel, Symfony, Slim, Zend Expressive)
+
 ```
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -121,11 +123,14 @@ Route::get('/', function (ServerRequestInterface $request) {
 });
 ```
 
+* Simple
+* Works out of the box
+
 +++
 
-Custom controller action
-
 #### Facade method
+
+Which you can inside regular controller action method:
 
 ```
 $result = \GraphQL\GraphQL::executeQuery(
@@ -139,6 +144,8 @@ $result = \GraphQL\GraphQL::executeQuery(
     $validationRules = null
 );
 ```
+* Can be integrated with whatever framework 
+* Allows customisation
 
 ---
 
@@ -170,6 +177,42 @@ Out-of-the box approach
 
 ### Circular dependencies
 
+In order to instantiate resolvers regular DI will fail
+
+```
+type User {
+  lastPost: Post!
+}
+
+type Post {
+  user: User!
+}
+```
+
+```
+ArrayResolver\User
+-> ClosureResolver\Post
+-> ArrayResolver\Post
+-> ArrayResolver\User
+```
+
+![GitHub](assets/proxy-manager.png)
+
+https://github.com/webonyx/graphql-php
+
+### Fields visibility
+
+We have users, 
+
+---
+
+## Writing middleware
+
+```
+AuthorizedResolverInterface
+AdminResolverInterface
+```
+
 ---
 
 ## Error handling
@@ -198,10 +241,65 @@ Handling multiple errors (validation)
 
 ### Logging
 
+We do handle all the exceptions, yes. However we still need to log them.
+
+### Security
+
+* Disable introspection on production
+* Limit maximal queries complexity
+* Hide your back-office JS from public access
+
+### Testing framework
+
+You will have to write custom PHPUnit abstraction layer. In our case:
+
+```
+function assertQuerySuccess(Query $query, array $variables = []): GraphQLResponse
+function assertQueryFail(Query $query, array $variables = []): GraphQLResponse
+function assertQueryErrors(string ...$expectErrors): void
+```
+
+### Testing helper calls
+
+Handy to have helper methods for every request:
+
+```
+function mutationXxxxYyyy(array $variables, string $returnFields = '{default{fields}}'): Query
+function queryXxxxYyyy(array $variables, string $returnFields = '{default{fields}}'): Query
+```
+
+Faker to generate variables as much as possible, but allowing to overwrite them via `$variables`
+
+Test example:
+
+```
+public function testRegistrationSuccess()
+{
+  $mutation = $this->mutationAuthRegister(
+    [],
+    '{viewer{user{firstName}}}'
+  );
+  $this->assertQuerySuccess($mutation);
+  $this->assertSame($mutation->vars->firstName, $this->responseData['viewer.user.firstName']);
+}
+```
 
 ---
 
 ## Lead time
+
+Warning! Very broad assumptions!
+
+* Learning curve: 1 week for playground and experiments
+* Prototype: 1 week for basic integration
+* First real use-case: 2 weeks all around, including alignment with the front-end team
+
+---
+
+## Benefits
+
+* Separate front-end - Twig and other back-end templating are dying
+* Full-fletch testing scenarios - starting from registering users
 
 ---
 
