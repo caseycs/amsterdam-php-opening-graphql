@@ -538,7 +538,7 @@ Out-of-the-box: `interface GraphQL\Error\ClientAware` - to propagate original ex
 
 ### Logging
 
-We do handle all the exceptions, yes. However it's important not to forger to still log them - at least 
+We do handle all the exceptions, yes. However it's important not to forget to still log them - at least which front-end is not aware of.
 
 ---
 
