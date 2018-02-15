@@ -606,7 +606,7 @@ public function testRegistrationSuccess()
 
 ## Tooling
 
-### Schema browser
++++
 
 [ChomeiQL](https://chrome.google.com/webstore/detail/chromeiql/fkkiamalmpiidkljmicmjfbieiclmeij?hl=en)
 
@@ -614,13 +614,11 @@ public function testRegistrationSuccess()
 
 +++
 
-### Allows you to add new call
-
 [GraphQL Faker](https://github.com/APIs-guru/graphql-faker)
 
-![GitHub](assets/chromeiql.png)
-
 Proxies your current endpoint and allows you to add new queries and fields to existing ones.
+
+![GitHub](assets/graphql-faker.png)
 
 --- 
 
@@ -633,6 +631,8 @@ Proxies your current endpoint and allows you to add new queries and fields to ex
 +++ 
 
 ### It's not super-simple
+
+Unfortunately.
 
 This is what you will feel during first 1-2 weeks, while trying to combine all the pieces together.
 
