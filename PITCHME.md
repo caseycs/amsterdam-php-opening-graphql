@@ -198,7 +198,7 @@ type Viewer {
 
 ## Libraries
 
-What open-source community will bring to us
+What open-source community currently have?
 
 +++ 
 
