@@ -64,11 +64,15 @@ Strictly typed
 
 ### Custom scalar types
 
+Allows "on-the-fly" data conversion: both incoming, and resulting.
+
 Examples: 
 
 * Date
 * DateTime
 * Uuid
+
+So your resolvers can operate with Carbon and UuidInterface.
 
 ---
 
@@ -181,9 +185,13 @@ ArrayResolver\User
 
 +++
 
-![GitHub](assets/proxy-manager.png)
+### ProxyManager
 
-https://github.com/webonyx/graphql-php
+OOP Proxy wrappers utilities - generates and manages proxies of your objects 
+
+![Proxy Manager](assets/proxy-manager.png)
+
+https://github.com/Ocramius/ProxyManager
 
 +++
 
@@ -191,22 +199,34 @@ https://github.com/webonyx/graphql-php
 
 We have guests, users and admins.
 
-It's very convenient to use GraphQL for both of them: simple, no code duplication.
+It's very convenient to use GraphQL for all of them: simple, no code duplication.
 However extra attention which field to show to whom is important. 
+
++++
 
 Our approach:
 
 * Mark fields as required according to the real data model, and return empty/invalid value (beginning of the century for the date) when permissions is not enough
 * Return `permissionDenied` application error when filter is not available
-* Adjust related queries according to user permissions
+* Always "downgrade" related data queries according to user permissions
 
 ---
 
 ## Writing middleware
 
+No middleware support our of the box, but you can emulate them by wrapping resolvers intro closures.
+
+Example use-case: analyse resolver interface to extract permission check:
+
 ```
-AuthorizedResolverInterface
-AdminResolverInterface
+interface ResolverInterface
+{
+    public function resolve(array $root, array $args,
+    Context $context);
+}
+
+interface AuthorizedResolverInterface
+interface AdminResolverInterface
 ```
 ---
 
