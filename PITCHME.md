@@ -79,30 +79,6 @@ type Pet {
 
 +++
 
-### Use-cases
-
-* External API
-* Front-end, especially - fully separated ones, since Twig and whole back-end templating is slowly dying
-
-### Who are using GraphQL?
-
-* Facebook
-* GitHub 
-* Coursera
-* Yelp
-* ...
-
----
-
-## Defining protocol
-
-* Separating entities
-* Different point of view, then database tables and Doctrine models
-
-
-
-+++ 
-
 ### Enums
 
 No more pain to understand all possible values:
@@ -119,7 +95,54 @@ enum Weekday {
 }
 ```
 
-+++ 
++++
+
+### Use-cases
+
+* External API
+* Front-end, especially - fully separated ones, since Twig and whole back-end templating is slowly dying
+* Back-office - however it does not feel like from the very beginning
+
++++
+
+### Who are using GraphQL?
+
+* Facebook
+* GitHub 
+* Coursera
+* Yelp
+* ...
+
+---
+
+## Defining protocol
+
+Separating entities - different point of view, then database tables and Doctrine models.
+
+User from the front-end prospective might mean combination of all your database tables, which store all the related data.
+
+Hard to get "back-end developer" context out of your head and start thinking as an API consumer.
+
++++
+
+### Entities
+
+Examples of different approach:
+
+* ImageAvatar with specific resizes instead of generic Image Model
+* Geolocation of different elements from the front-end prospective might look all the same, even when on the back-end they are stored totally different
+
+```
+type User {
+  uuid: Uuid!
+  email: String!
+  avatar: ImageAvatar
+  posts(filter: PostsFilter!): [Post]!
+  address: Address!
+}
+```
+
++++
 
 ### Queries
 
@@ -134,7 +157,6 @@ input PostFilter {
 type Post {
   uuid: Uuid
 }
-
 ```
 
 +++
@@ -146,6 +168,11 @@ authLoginViaEmail(input: AuthLoginViaEmailInput): AuthLoginViaEmailPayload
 input AuthLoginViaEmailInput {
   email: String!
   password: String!
+  location: LocationInput
+}
+input LocationInput {
+  lat: Float!
+  lng: Float!
 }
 type AuthLoginViaEmailPayload {
   viewer: Viewer!
@@ -153,7 +180,6 @@ type AuthLoginViaEmailPayload {
 type Viewer {
   uuid: Uuid!
 }
-
 ```
 
 +++
@@ -236,27 +262,103 @@ $result = \GraphQL\GraphQL::executeQuery(
 
 ## Describing protocol
 
-+++
-
 ### PHP code
+
+Via arrays and classes
+
+* + you get all the functionality (unions, returning interfaces, etc)
+* - extra tooling to show it to front-end team
+* - no way for the front-end developers to make PRs
 
 +++ 
 
 ### Schema file
 
+* + simpler&easier to setup and collaborate
+* - does not support all the GraphQL features
+
 ---
 
 ## Writing resolvers
 
-Out-of-the box approach
+What is are `resolvers`?
+
+Very confusive example out-of-the-box!
+
+```
+$queryType = new ObjectType([
+    'name' => 'Query',
+    'fields' => [
+        'echo' => [
+            'type' => Type::string(),
+            'args' => [
+                'message' => Type::nonNull(Type::string()),
+            ],
+            'resolve' => function ($root, $args) {
+                return $root['prefix'] . $args['message'];
+            }
+        ],
+    ],
+]);
+```
+
++++
+
+### How do we deal with it
+
+Closure hell. It really is.
+
+```
+interface ResolverInterface
+{
+    public function resolve($root, $args, $context);
+}
+```
+
+* Class per each query and mutation
+* ArrayResolver per types for raw fields
+* ClosureResolver per type for relations
 
 +++
 
 ### Array resolvers
 
+* Input: models/entities of your application
+* Output: array with scalars and closures
+
+Closures are very important part! You can always return a closure instead of a raw field, and it will be executed only on demand. 
+
+```
+type User {
+  uuid: Uuid!
+  email: String!
+  avatar: ImageAvatar
+  posts(filter: PostsFilter!): [Post]!
+  address: Address!
+}
+```
+
 +++
 
 ### Closure resolvers
+
+Types have relations (user->post, post->comments, comment->parentComment), so we use classes with return closures to deal with it:
+
+```
+class ClosureResolver\ImageAvatar {
+  public function byUserUuid(UuidInterface $uuid) {
+    return array $root, array $args, Context $context) use ($userUuid) {
+      ...
+    }
+  }
+}
+```
+
++++
+
+### N+1 issues
+
+There is a good way to use mysql `where IN` or Redis `mget`, it's just one more closure ;)
 
 +++
 
@@ -316,12 +418,6 @@ No middleware support our of the box, but you can emulate them by wrapping resol
 Example use-case: analyse resolver interface to extract permission check:
 
 ```
-interface ResolverInterface
-{
-    public function resolve(array $root, array $args,
-    Context $context);
-}
-
 interface AuthorizedResolverInterface
 interface AdminResolverInterface
 ```
@@ -335,7 +431,33 @@ interface AdminResolverInterface
 
 +++
 
-### Error format
+### Default error format
+
+```
+mutation internalError {
+  internalError
+}
+{
+  "errors": [
+    {
+      "message": "Internal server error",
+      "category": "internal",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "internalError"
+      ]
+    }
+  ],
+  "data": {
+    "internalError": null
+  }
+}
+```
 
 ### Handling multiple errors (validation)
 
@@ -346,20 +468,31 @@ interface AdminResolverInterface
 
 ### Types of errors
 
-* Errors that we expose the client
-* All other application errors
+`interface GraphQL\Error\ClientAware` - to propagate original exception to the GraphQL errors (message). Don't do it.
+
+* Category `application` - to be handled by the front-end
+* Category `internal` - errors what we missed inside graphql
+* Alias `error` - identifier for the front-end
+
+```
+{
+  "message": "Something human-readable",
+  "category": "application",
+  "error": "camelCasedIdentifier"
+}
+```
 
 +++
 
 ### Logging
 
-We do handle all the exceptions, yes. However we still need to log them.
+We do handle all the exceptions, yes. However it's important not to forger to still log them - at least 
 
 ---
 
 ## Testing
 
-You will have to write custom PHPUnit abstraction layer. In our case:
+You will have to write custom PHPUnit abstraction layer. For example:
 
 ```
 assertQuerySuccess(Query $query, array $variables = []
@@ -373,14 +506,17 @@ assertQueryErrors(string ...$expectErrors): void
 
 ### PHPUnit helper calls
 
-Handy to have helper methods for every request:
+* Handy to have helper methods for every request
+* Use faker to generate variables as much as possible, but allowing to overwrite them via `$variables`
+* Allow to customise return fields for reusability
+
 
 ```
-mutationXxxxYyyy(
+queryXxxx(
   array $variables,
   string $returnFields = '{default{fields}}'
 ): Query
-queryXxxxYyyy(
+mutationYyyy(
   array $variables,
   string $returnFields = '{default{fields}}'
 ): Query
@@ -389,8 +525,6 @@ queryXxxxYyyy(
 +++
 
 ### Test example
-
-Faker to generate variables as much as possible, but allowing to overwrite them via `$variables`
 
 ```
 public function testRegistrationSuccess()
@@ -443,6 +577,12 @@ Proxies your current endpoint and allows you to add new queries and fields to ex
 * Learning curve: 1 week for playground and experiments
 * First prototype: 1 week for basic integration
 * First real use-case: 2 weeks before going live, including alignment with the front-end team
+
++++ 
+
+### It's not super-simple
+
+This is what you will feel during first 1-2 weeks, while trying to combine all the pieces together.
 
 ---
 
