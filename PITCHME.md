@@ -268,9 +268,11 @@ $resultArray = \GraphQL\GraphQL::executeQuery(
 
 ### Via PHP code
 
-Via arrays and classes
+Arrays and classes
 
 + you get all the functionality (unions, returning interfaces, etc)
+
+- looks horrible ;-)
 
 - extra tooling to expose for the front-end team: deploy-on push, auto-generate on commit, etc
 
