@@ -290,7 +290,7 @@ Arrays and classes
 
 ## Writing resolvers
 
-What is are `resolvers`?
+What are `resolvers`?
 
 Very confusive example out-of-the-box!
 
@@ -331,6 +331,25 @@ interface ResolverInterface
 * ArrayResolver per type for scalar fields
 * ClosureResolver per type for relations
 
++++
+
+### Query/mutation class
+
+```
+type Query {
+  user(uuid: Uuid!): User!
+}
+
+class GraphQl\Query\User
+{
+  ...
+  public function resolve(array $root, array $args, Context $context)
+  {
+    return $this->userArrayResolver
+      ->raw($this->userFacade->find($args['uuid']));
+  }
+}
+```
 +++
 
 ### Array resolvers
