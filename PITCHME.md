@@ -199,13 +199,26 @@ ArrayResolver\User
 -> ArrayResolver\User
 ```
 
++++
+
 ![GitHub](assets/proxy-manager.png)
 
 https://github.com/webonyx/graphql-php
 
-### Fields visibility
++++
 
-We have users, 
+### Fields&relations visibility/restrictions
+
+We have guests, users and admins.
+
+It's very convenient to use GraphQL for both of them: simple, no code duplication.
+However extra attention which field to show to whom is important. 
+
+Our approach:
+
+* Mark fields as required according to the real data model, and return empty/invalid value (beginning of the century for the date) when permissions is not enough
+* Return `permissionDenied` application error when filter is not available
+* Adjust related queries according to user permissions
 
 ---
 
@@ -227,7 +240,7 @@ AdminResolverInterface
 
 ### Error format
 
-Handling multiple errors (validation)
+### Handling multiple errors (validation)
 
 * Multiple errors per request
 * Nested errors
