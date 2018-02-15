@@ -11,9 +11,7 @@ Or maybe a bit more ;-)
 * Implementation: libraries, frameworks integration
 * Writing the code: resolvers, middleware
 * Error handling: format, types, logging
-* Testing
-* Security
-* Tooling
+* Testing, security, tooling
 * Lead time: how long it will take
 * Questions
 
@@ -103,24 +101,12 @@ We already have a frameworks
 
 #### PSR-7 Server
 
-Provides standalone server
+Provides standalone server, which you can plug into your framework (Laravel, Symfony, Slim, Zend Expressive)
 
-```
-class GraphQL\Server\StandardServer
-{
-    public function processPsrRequest(
-        Psr\Http\Message\ServerRequestInterface $request,
-        Psr\Http\Message\ResponseInterface $response,
-        Psr\Http\Message\StreamInterface $writableBodyStream
-    ): Psr\Http\Message\ResponseInterface
-}
-```
-
-Which you can plug into your framework (Laravel, Symfony, Slim, Zend Expressive)
+Laravel example:
 
 ```
 use Psr\Http\Message\ServerRequestInterface;
-
 Route::get('/', function (ServerRequestInterface $request) {
     ...
 });
@@ -137,14 +123,9 @@ Which you can inside regular controller action method:
 
 ```
 $result = \GraphQL\GraphQL::executeQuery(
-    $schema, 
-    $queryString, 
-    $rootValue = null, 
-    $context = null, 
-    $variableValues = null, 
-    $operationName = null,
-    $fieldResolver = null,
-    $validationRules = null
+    $schema, $queryString, $rootValue, $context,
+    $variableValues, $operationName, $fieldResolver,
+    $validationRules
 );
 ```
 * Can be integrated with whatever framework 
@@ -186,7 +167,6 @@ In order to instantiate resolvers regular DI will fail
 type User {
   lastPost: Post!
 }
-
 type Post {
   user: User!
 }
@@ -265,8 +245,10 @@ We do handle all the exceptions, yes. However we still need to log them.
 You will have to write custom PHPUnit abstraction layer. In our case:
 
 ```
-assertQuerySuccess(Query $query, array $variables = []): GraphQLResponse
-assertQueryFail(Query $query, array $variables = []): GraphQLResponse
+assertQuerySuccess(Query $query, array $variables = []
+  ): GraphQLResponse
+assertQueryFail(Query $query, array $variables = []
+  ): GraphQLResponse
 assertQueryErrors(string ...$expectErrors): void
 ```
 
@@ -277,8 +259,14 @@ assertQueryErrors(string ...$expectErrors): void
 Handy to have helper methods for every request:
 
 ```
-mutationXxxxYyyy(array $variables, string $returnFields = '{default{fields}}'): Query
-queryXxxxYyyy(array $variables, string $returnFields = '{default{fields}}'): Query
+mutationXxxxYyyy(
+  array $variables,
+  string $returnFields = '{default{fields}}'
+): Query
+queryXxxxYyyy(
+  array $variables,
+  string $returnFields = '{default{fields}}'
+): Query
 ```
 
 +++
@@ -316,7 +304,7 @@ public function testRegistrationSuccess()
 
 ### Schema browser
 
-ChomeiQL: https://chrome.google.com/webstore/detail/chromeiql/fkkiamalmpiidkljmicmjfbieiclmeij?hl=en
+[ChomeiQL](https://chrome.google.com/webstore/detail/chromeiql/fkkiamalmpiidkljmicmjfbieiclmeij?hl=en)
 
 ![GitHub](assets/chromeiql.png)
 
@@ -324,7 +312,7 @@ ChomeiQL: https://chrome.google.com/webstore/detail/chromeiql/fkkiamalmpiidkljmi
 
 ### Allows you to add new call
 
-GraphQL Faker: https://github.com/APIs-guru/graphql-faker
+[GraphQL Faker](https://github.com/APIs-guru/graphql-faker)
 
 ![GitHub](assets/chromeiql.png)
 
@@ -351,4 +339,6 @@ Warning! Very broad assumptions!
 
 ## Questions
 
-This presentation is available on GitHub: https://github.com/caseycs/amsterdam-php-opening-graphql
+This presentation is available on GitHub
+
+https://github.com/caseycs/amsterdam-php-opening-graphql
