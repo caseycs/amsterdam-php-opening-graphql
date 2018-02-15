@@ -97,6 +97,20 @@ enum Weekday {
 
 +++
 
+### Custom scalar types
+
+Allows "on-the-fly" data conversion: both incoming, and resulting.
+
+Examples: 
+
+* Date
+* DateTime
+* Uuid
+
+So your resolvers can operate with Carbon and UuidInterface.
+
++++
+
 ### Use-cases
 
 * External API
@@ -180,20 +194,6 @@ type Viewer {
   uuid: Uuid!}
 ```
 
-+++
-
-### Custom scalar types
-
-Allows "on-the-fly" data conversion: both incoming, and resulting.
-
-Examples: 
-
-* Date
-* DateTime
-* Uuid
-
-So your resolvers can operate with Carbon and UuidInterface.
-
 ---
 
 ## Libraries
@@ -223,6 +223,12 @@ We already have a frameworks
 
 +++
 
+### Eloquent binding
+
+... and similar ORM/ActiveRecord mappers - please, don't.
+
++++
+
 #### PSR-7 Server
 
 Provides standalone server, which you can plug into your framework (Laravel, Symfony, Slim, Zend Expressive)
@@ -247,7 +253,7 @@ Route::get('/', function (ServerRequestInterface $request) {
 Which you can inside regular controller action method:
 
 ```
-$result = \GraphQL\GraphQL::executeQuery(
+$resultArray = \GraphQL\GraphQL::executeQuery(
     $schema, $queryString, $rootValue, $context, $variables
 );
 ```
@@ -260,20 +266,25 @@ $result = \GraphQL\GraphQL::executeQuery(
 
 ## Describing protocol
 
-### PHP code
++++
+
+### Via PHP code
 
 Via arrays and classes
 
-* + you get all the functionality (unions, returning interfaces, etc)
-* - extra tooling to show it to front-end team
-* - no way for the front-end developers to make PRs
++ you get all the functionality (unions, returning interfaces, etc)
+
+- extra tooling to expose for the front-end team: deploy-on push, auto-generate on commit, etc
+
+- no way for the front-end developers to make/comment on pull requests
 
 +++ 
 
-### Schema file
+### Via schema file
 
-* + simpler&easier to setup and collaborate
-* - does not support all the GraphQL features
++ simpler&easier to setup and collaborate
+
+- does not support all the GraphQL features
 
 ---
 
@@ -309,12 +320,15 @@ Closure hell. It really is.
 ```
 interface ResolverInterface
 {
-    public function resolve($root, $args, $context);
+    public function resolve($root, $args, Context $context);
 }
 ```
 
+`$root` is an array of root-level resolvers
+`$context` is a container (usually immutable) to pass global scope, such as authorisation details.
+
 * Class per each query and mutation
-* ArrayResolver per types for raw fields
+* ArrayResolver per type for scalar fields
 * ClosureResolver per type for relations
 
 +++
@@ -384,7 +398,7 @@ ArrayResolver\User
 
 ### ProxyManager
 
-OOP Proxy wrappers utilities - generates and manages proxies of your objects 
+OOP Proxy wrappers utilities - generates and manages proxies of your objects.
 
 ![Proxy Manager](assets/proxy-manager.png)
 
@@ -401,7 +415,7 @@ However extra attention which field to show to whom is important.
 
 +++
 
-Two approaches: fake/downgrade or throw error (like `permissionDenied`).
+Two approaches: fake/downgrade or throw an error (like `permissionDenied`).
 
 * Mark fields as required according to the real data model, and return empty value (empty string, -1, beginning of the century for the date) on user permissions mismatch
 * Always "downgrade" related data queries according to user permissions
@@ -413,7 +427,7 @@ Two approaches: fake/downgrade or throw error (like `permissionDenied`).
 
 No middleware support our of the box, but you can emulate them by wrapping resolvers into closures.
 
-Example use-case: analyse resolver interface to extract permission check:
+Example use-case: analyse resolver interface to extract permissions check:
 
 ```
 interface AuthorizedResolverInterface
@@ -457,26 +471,66 @@ mutation internalError {
 }
 ```
 
++++
+
 ### Handling multiple errors (validation)
 
 * Multiple errors per request
-* Nested errors
+* Nested errors via custom formatter
+
+```
+{
+  "errors": [
+    {
+      "message": "Demo error",
+      "category": "application",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "applicationError"
+      ],
+      "error": "demoError",
+      "field": "field",
+      "params": {
+        "param": "value"
+      },
+      "children": [
+        {
+          "error": "error",
+          "message": "Error message",
+          "field": "field",
+          "params": {
+            "param": "value"
+          }
+        }
+      ]
+    }
+  ],
+  "data": {
+    "applicationError": null
+  }
+}
+```
 
 +++
 
 ### Types of errors
 
-`interface GraphQL\Error\ClientAware` - to propagate original exception to the GraphQL errors (message). Don't do it.
+Out-of-the-box: `interface GraphQL\Error\ClientAware` - to propagate original exception to the GraphQL errors (message). Don't do it.
 
 * Category `application` - to be handled by the front-end
 * Category `internal` - errors what we missed inside graphql
-* Alias `error` - identifier for the front-end
+* `error` field as identifier for the front-end
 
 ```
 {
   "message": "Something human-readable",
   "category": "application",
-  "error": "camelCasedIdentifier"
+  "error": "camelCaseIdentifier"
 }
 ```
 
