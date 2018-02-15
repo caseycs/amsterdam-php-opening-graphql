@@ -9,8 +9,8 @@ Or maybe a bit more ;-)
 * About GraphQL: into, examples, use-cases
 * Defining protocol
 * Implementation: libraries, frameworks integration
-* Writing the code: resolvers
-* Error handling: format, types, logging
+* Writing the code: resolvers, middleware
+* Error handling: format, types, logging, testing, security
 * Lead time: how long it will take
 * Questions
 
@@ -212,7 +212,6 @@ We have users,
 AuthorizedResolverInterface
 AdminResolverInterface
 ```
-
 ---
 
 ## Error handling
@@ -242,12 +241,6 @@ Handling multiple errors (validation)
 ### Logging
 
 We do handle all the exceptions, yes. However we still need to log them.
-
-### Security
-
-* Disable introspection on production
-* Limit maximal queries complexity
-* Hide your back-office JS from public access
 
 ### Testing framework
 
@@ -283,6 +276,14 @@ public function testRegistrationSuccess()
   $this->assertSame($mutation->vars->firstName, $this->responseData['viewer.user.firstName']);
 }
 ```
++++
+
+### Security
+
+* Disable introspection on production
+* Limit maximal queries complexity
+* Hide your back-office JS from public access
+
 
 ---
 
