@@ -413,6 +413,7 @@ type Post {
 ArrayResolver\User
 -> ClosureResolver\Post
 -> ArrayResolver\Post
+-> ClosureResolver\User
 -> ArrayResolver\User
 ```
 
