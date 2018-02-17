@@ -373,12 +373,14 @@ type User {
 
 ### Closure resolvers
 
-Types have relations (user->post, post->comments, comment->parentComment), so we use classes which return closures to deal with it:
+Types have relations (user->post), so we use classes which return closures to deal with it:
 
 ```
 class ClosureResolver\ImageAvatar {
   public function byUserUuid(UuidInterface $uuid) {
-    return array $root, array $args, Context $context) use ($userUuid) {
+    return function(array $root, array $args,
+      Context $context) use ($userUuid)
+    {
       ...
       return $this->imageAvatarArrayResolver($model)
     }
