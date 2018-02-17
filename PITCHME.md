@@ -333,7 +333,7 @@ interface ResolverInterface
 
 +++
 
-### Query/mutation class
+### Query schema & resolver class
 
 ```
 type Query {
